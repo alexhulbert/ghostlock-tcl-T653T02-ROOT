@@ -20,7 +20,18 @@
 
 #define EXPECTED_RELEASE "5.15.180-android14-11"
 #define MAX_SELINUX_POLICY (16U * 1024U * 1024U)
-#define V643_SELINUX_POLICY_SIZE 1030054U
+#define V643_SELINUX_POLICY_SIZE 1030054U /* T653T01 V643 */
+#define V321_SELINUX_POLICY_SIZE 1029440U /* T653T02 V321 */
+
+static int selinux_policy_size_is_known(size_t size) {
+  static const uint32_t known[] = {
+      V643_SELINUX_POLICY_SIZE,
+      V321_SELINUX_POLICY_SIZE,
+  };
+  for (size_t i = 0; i < sizeof(known) / sizeof(known[0]); i++)
+    if (size == known[i]) return 1;
+  return 0;
+}
 #define REQUIRED_MANAGER_PACKAGE "com.philiphall6.resukisu.tcl"
 #define TCL_LAB_PREFIX "/data/local/tmp/tcl-v643-resukisu-lab/"
 
@@ -83,7 +94,7 @@ static int verify_v643_policy_header(const unsigned char *policy,
   const uint32_t policy_version = 30U;
   const uint32_t policy_config = 0xc0000001U;
   static const unsigned char target[] = "SE Linux";
-  if (size != V643_SELINUX_POLICY_SIZE || load_le32(policy) != policy_magic) {
+  if (!selinux_policy_size_is_known(size) || load_le32(policy) != policy_magic) {
     errno = EINVAL;
     return -1;
   }
